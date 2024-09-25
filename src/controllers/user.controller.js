@@ -4,18 +4,20 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
-const generateAccessAndRefreshTokens = async (userId) => {
+const generateAccessAndRefereshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
     const accessToken = user.generateAccessToken();
     const refreshToken = user.generateRefreshToken();
+
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+
     return { accessToken, refreshToken };
   } catch (error) {
     throw new ApiError(
       500,
-      "Something went wrong, while generating access and refresh token"
+      "Something went wrong while generating referesh and access token"
     );
   }
 };
@@ -78,7 +80,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
-  if (!username || !email) {
+  if (!username && !email) {
     throw new ApiError(400, "username or email is required");
   }
 
@@ -91,10 +93,12 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const isPasswordValid = await user.isPasswordCorrect(password);
+
   if (!isPasswordValid) {
     throw new ApiError(401, "Password Incorrect");
   }
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+
+  const { accessToken, refreshToken } = await generateAccessAndRefereshTokens(
     user._id
   );
 
